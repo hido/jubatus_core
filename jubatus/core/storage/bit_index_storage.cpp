@@ -133,11 +133,20 @@ void bit_index_storage::similar_row(
     const bit_vector& bv,
     vector<pair<string, float> >& ids,
     uint64_t ret_num) const {
+  similar_row(bv, ids, ret_num, 0);
+}
+
+void bit_index_storage::similar_row(
+    const bit_vector& bv,
+    vector<pair<string, float> >& ids,
+    uint64_t ret_num,
+    uint64_t pseudo_unmatched_bit_num) const {
   ids.clear();
-  uint64_t bit_num = bv.bit_num();
-  if (bit_num == 0) {
+  uint64_t bit_num = bv.bit_num() + pseudo_unmatched_bit_num;
+  if (bv.bit_num() == 0) {
     return;
   }
+
 
   heap_type heap(ret_num);
 

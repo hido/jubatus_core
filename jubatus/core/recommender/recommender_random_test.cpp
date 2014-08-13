@@ -55,6 +55,34 @@ sfv_diff_t make_vec(const string& c1, const string& c2, const string& c3) {
   return v;
 }
 
+sfv_diff_t make_vec(
+    const string& c1,
+    const string& c2,
+    const string& c3,
+    const string& c4) {
+  sfv_diff_t v;
+  v.push_back(make_pair(c1, 1.0));
+  v.push_back(make_pair(c2, 1.0));
+  v.push_back(make_pair(c3, 1.0));
+  v.push_back(make_pair(c4, 1.0));
+  return v;
+}
+
+sfv_diff_t make_vec(
+    const string& c1,
+    const string& c2,
+    const string& c3,
+    const string& c4,
+    const string& c5) {
+  sfv_diff_t v;
+  v.push_back(make_pair(c1, 1.0));
+  v.push_back(make_pair(c2, 1.0));
+  v.push_back(make_pair(c3, 1.0));
+  v.push_back(make_pair(c4, 1.0));
+  v.push_back(make_pair(c5, 1.0));
+  return v;
+}
+
 framework::linear_mixable*
 get_mixable(recommender_base& r) {
   return dynamic_cast<framework::linear_mixable*>(r.get_mixable());
@@ -77,6 +105,30 @@ TYPED_TEST_P(recommender_random_test, trivial) {
   ASSERT_EQ(1u, ids.size());
   EXPECT_EQ("r1", ids[0].first);
 }
+
+TYPED_TEST_P(recommender_random_test, consistency) {
+  TypeParam r;
+
+  r.update_row("r1", make_vec("c1", "c2", "c3"));
+  r.update_row("r2", make_vec("c4", "c5", "c6"));
+
+  vector<pair<string, float> > ids1;
+  vector<pair<string, float> > ids2;
+  vector<pair<string, float> > ids3;
+  vector<pair<string, float> > ids4;
+
+  r.similar_row(make_vec("c1", "c2", "c4"), ids1, 1);
+  // similar_row_for a sample with new column "c7"
+  r.similar_row(make_vec("c1", "c2", "c4", "c7"), ids2, 1);
+  // similar_row_for a sample with new column "c7"
+  r.similar_row(make_vec("c1", "c2", "c4", "c7", "c8"), ids3, 1);
+  r.similar_row(make_vec("c1", "c2", "c4"), ids4, 1);
+
+  EXPECT_TRUE(ids1[0].second > ids2[0].second);
+  EXPECT_TRUE(ids2[0].second > ids3[0].second);
+  EXPECT_TRUE(ids1[0].second == ids4[0].second);
+}
+
 
 TYPED_TEST_P(recommender_random_test, random) {
   jubatus::util::math::random::mtrand rand(0);
@@ -307,8 +359,8 @@ TYPED_TEST_P(recommender_random_test, mix) {
 }
 
 REGISTER_TYPED_TEST_CASE_P(recommender_random_test,
-    trivial, random, pack_and_unpack, get_all_row_ids,
-    diff, mix);
+    trivial, consistency, random, pack_and_unpack,
+    get_all_row_ids, diff, mix);
 
 typedef testing::Types<inverted_index, lsh, minhash, euclid_lsh>
   recommender_types;

@@ -77,6 +77,19 @@ void prod_invert_and_vector(
   ret.swap(r);
 }
 
+size_t get_new_feature_count(
+    const jubatus::util::data::unordered_map<std::string, std::vector<float> >&
+        matrix,
+    const common::sfv_t& vec) {
+  float count = 0;
+  for (size_t i = 0; i < vec.size(); ++i) {
+    if (matrix.count(vec[i].first) == 0) {
+      ++count;
+    }
+  }
+  return count;
+}
+
 }  // namespace recommender
 }  // namespace core
 }  // namespace jubatus

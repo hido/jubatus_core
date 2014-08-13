@@ -79,7 +79,13 @@ void lsh::similar_row(
 
   bit_vector query_bv;
   calc_lsh_values(query, query_bv);
-  mixable_storage_->get_model()->similar_row(query_bv, ids, ret_num);
+  const size_t pseudo_unmatched_bit_num = 
+      base_num_ * get_new_feature_count(column2baseval_, query);
+  mixable_storage_->get_model()->similar_row(
+      query_bv,
+      ids,
+      ret_num,
+      pseudo_unmatched_bit_num);
 }
 
 void lsh::neighbor_row(
@@ -105,8 +111,6 @@ void lsh::clear_row(const string& id) {
 }
 
 void lsh::calc_lsh_values(const common::sfv_t& sfv, bit_vector& bv) const {
-  const_cast<lsh*>(this)->generate_column_bases(sfv);
-
   vector<float> lsh_vals;
   prod_invert_and_vector(column2baseval_, sfv, base_num_, lsh_vals);
   set_bit_vector(lsh_vals, bv);
