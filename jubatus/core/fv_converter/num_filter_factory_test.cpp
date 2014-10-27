@@ -17,6 +17,7 @@
 #include <map>
 #include <string>
 #include <gtest/gtest.h>
+#include "../common/exception.hpp"
 #include "exception.hpp"
 #include "num_filter_factory.hpp"
 #include "num_filter_impl.hpp"
@@ -48,6 +49,63 @@ TEST(num_filter_factory, create_add_filter) {
 
   EXPECT_EQ(typeid(add_filter).name(), typeid(*filter).name());
   EXPECT_EQ(20.0, filter->filter(10.0));
+}
+
+TEST(num_filter_factory, create_linear_normalization_filter) {
+  num_filter_factory f;
+  std::map<std::string, std::string> params;
+  params["min"] = "-100";
+  params["max"] = "100";
+  jubatus::util::lang::shared_ptr<num_filter>
+      filter(f.create("linear_normalization", params));
+
+  EXPECT_EQ(typeid(linear_normalization_filter), typeid(*filter));
+  EXPECT_DOUBLE_EQ(0, filter->filter(-100));
+  EXPECT_DOUBLE_EQ(0.25, filter->filter(-50));
+  EXPECT_DOUBLE_EQ(0.5, filter->filter(0));
+  EXPECT_DOUBLE_EQ(0.75, filter->filter(50));
+  EXPECT_DOUBLE_EQ(1, filter->filter(100));
+}
+
+TEST(num_filter_factory, create_gaussian_normalization_filter) {
+  num_filter_factory f;
+  std::map<std::string, std::string> params;
+  params["average"] = "100";
+  params["variance"] = "100";
+  jubatus::util::lang::shared_ptr<num_filter>
+      filter(f.create("gaussian_normalization", params));
+
+  EXPECT_EQ(typeid(gaussian_normalization_filter),
+            typeid(*filter));
+  EXPECT_DOUBLE_EQ(-1, filter->filter(0));
+  EXPECT_DOUBLE_EQ(-0.5, filter->filter(50));
+  EXPECT_DOUBLE_EQ(0, filter->filter(100));
+  EXPECT_DOUBLE_EQ(0.5, filter->filter(150));
+  EXPECT_DOUBLE_EQ(1, filter->filter(200));
+}
+
+TEST(num_filter_factory, exception_with_minus_variance) {
+  num_filter_factory f;
+  std::map<std::string, std::string> params;
+  params["average"] = "100";
+  params["variance"] = "-1";
+  EXPECT_THROW(f.create("gaussian_normalization", params),
+               common::invalid_parameter);
+}
+
+TEST(num_filter_factory, create_sigmoid_normalization_filter) {
+  num_filter_factory f;
+  std::map<std::string, std::string> params;
+  params["gain"] = "1";
+  params["bias"] = "0";
+  jubatus::util::lang::shared_ptr<num_filter>
+      filter(f.create("sigmoid_normalization", params));
+
+  EXPECT_EQ(typeid(sigmoid_normalization_filter),
+            typeid(*filter));
+  EXPECT_DOUBLE_EQ(0.5, filter->filter(0));
+  EXPECT_DOUBLE_EQ(1, filter->filter(999999999999999999));
+  EXPECT_DOUBLE_EQ(0, filter->filter(-999999999999999999));
 }
 
 }  // namespace fv_converter
